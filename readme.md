@@ -12,7 +12,7 @@ A lightweight web service based on a **BFF (Backend-For-Frontend)** architecture
 ## 🛡️ Security & Architecture
 
 * **Total Isolation:** The Synology NAS hosting your photos remains completely isolated from the web. Only this proxy service (FastAPI) is publicly accessible.
-* **Restricted Account & Reverse Engineering:** Uses a dedicated local account with minimal permissions. The system cleverly handles album sharing (including albums shared with the account without it being the initial creator) using opaque memory-mapped IDs (`secure_xxx`) and seamless passphrase management.
+* **Restricted Account** Uses a dedicated local account with minimal permissions. The system handles album sharing (including albums shared with the account without it being the initial creator) using memory-mapped IDs (`secure_xxx`).
 * **Optimized Streaming:** Images and thumbnails are streamed on-the-fly from the NAS to the client with HTTP cache headers (`Cache-Control`) to reduce bandwidth and server load.
 
 ---
