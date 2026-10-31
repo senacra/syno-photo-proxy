@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="page-title">Galerie Photos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="header-left">
+                <h1 id="main-title">Chargement...</h1>
+            </div>
+            <div class="header-right">
+                <button id="back-btn" class="hidden">← Retour aux albums</button>
+            </div>
+        </header>
+
+        <main>
+            <section id="welcome-banner" class="welcome-banner">
+                <div class="banner-content">
+                    <h2> À propos de cet espace privé</h2>
+                    <p>
+                        Cet espace a été créé pour partager nos souvenirs en toute intimité, <strong>sans intermédiaire commercial ni stockage sur des serveurs tiers</strong>. 
+                        Héberger ses photos sur les réseaux sociaux (Facebook, Instagram, WhatsApp, Snapchat, etc.), c'est confier sa vie privée à des entreprises qui les analysent, les monétisent et s'en servent pour entraîner leurs intelligences artificielles. Ici, tout reste à la maison, directement sur notre propre matériel.
+                    </p>
+                    <p class="warning-text">
+                        <strong>Règle importante :</strong> Merci de ne pas télécharger les photos pour les réexpédier ou les publier sur les réseaux sociaux ou des applications de messagerie.
+                    </p>
+                </div>
+            </section>
+
+            <div id="loader" class="hidden">Chargement des souvenirs...</div>
+            
+            <div id="albums-container" class="grid-container"></div>
+            <div id="photos-container" class="grid-container hidden"></div>
+        </main>
+    </div>
+
+    <div id="lightbox" class="hidden">
+        <span id="lightbox-close">&times;</span>
+        <img id="lightbox-img" src="" alt="Aperçu">
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
