@@ -23,10 +23,10 @@ A lightweight web service based on a **BFF (Backend-For-Frontend)** architecture
 ├── main.py              # FastAPI backend, routing, and static file serving
 ├── synology_client.py   # Synology API wrapper (Auth, Albums, Items, Stream)
 ├── requirements.txt     # Python dependencies
-├── .env                 # Environment configuration (ignored in git)
+├── .env                 # Environment configuration
 └── static/              # Frontend static files
     ├── index.html       # Main HTML gallery interface
-    ├── style.css        # Modern responsive CSS (GitHub alert style & light/dark mode)
+    ├── style.css        
     └── app.js           # Frontend logic (API fetch, grid rendering, lightbox)
 ```
 
