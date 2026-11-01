@@ -76,7 +76,7 @@ Open your browser and navigate to `http://localhost:8000`.
 
 ## 📌 Roadmap (TodoList)
 
-- [ ] **Docker Containerization:** Create an optimized `Dockerfile` and `docker-compose.yml` to simplify deployment on a server or a Synology NAS (via Container Manager).
+- [x] **Docker Containerization:** Create an optimized `Dockerfile` and `docker-compose.yml` to simplify deployment on a server or a Synology NAS (via Container Manager).
 - [ ] **User Management & External Authentication:** Implement an authentication layer (support for an authentication reverse proxy like Authelia / Authentik or OIDC integration) to restrict gallery access.
 - [ ] **Internationalization (i18n):** Add multi-language support directly into the frontend interface.
 - [ ] **UI / UX Improvements:** 

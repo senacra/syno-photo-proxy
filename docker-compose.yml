@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  syno-photo-proxy:
+    build: .
+    image: senacra/syno-photo-proxy:1.0.0
+    container_name: syno-photo-proxy
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    # Optionnel : pour pouvoir custom l'UI sans rebuild l'image
+    # volumes:
+    #   - ./static:/app/static
