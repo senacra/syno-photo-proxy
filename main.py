@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -66,6 +66,19 @@ async def get_image(item_id: str, cache_key: str, size: str = "sm", album_id: st
 @app.get("/api/config")
 async def get_config():
     return {"title": settings.gallery_title}
+
+@app.get("/api/user")
+async def get_user(request: Request):
+    headers = request.headers
+    username = headers.get("x-forwarded-preferred-username") or headers.get("x-forwarded-user")
+    email = headers.get("x-forwarded-email")
+
+    return {
+        "authenticated": bool(username or email),
+        "name": username,
+        "username": username,
+        "email": email,
+    }
 
 # Bien garder à la fin :)
 os.makedirs("static", exist_ok=True)

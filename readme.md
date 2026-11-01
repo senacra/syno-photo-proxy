@@ -94,19 +94,27 @@ Open your browser and navigate to `http://localhost:8000`.
 ## 📄 Main API Endpoints
 
 * `GET /api/config` : Retrieves general configuration (e.g., gallery title).
+* `GET /api/user` : Returns display information from trusted authentication-proxy headers, or an unauthenticated profile.
 * `GET /api/albums` : Lists authorized albums masked by secure IDs.
 * `GET /api/albums/{album_id}` : Returns the list of photos for a specific album.
 * `GET /api/images/{item_id}` : Proxy route to securely stream thumbnails and images from the Synology NAS.
+
+### Authentication & User Management
+
+This application does not manage user accounts or implement authentication, authorization, or OIDC login. These features may remain outside the scope of the project: the gallery is designed to work behind an external authentication service.
+
+A possible setup is your reverse proxy → [oauth2-proxy](https://github.com/oauth2-proxy/oauth2-proxy) → syno-photo-proxy, with oauth2-proxy delegating OIDC sign-in to an identity provider such as [Pocket ID](https://github.com/pocket-id/pocket-id) or [Keycloak](https://github.com/keycloak/keycloak).
+
+When oauth2-proxy forwards `X-Forwarded-Preferred-Username` (or `X-Forwarded-User`) and `X-Forwarded-Email`, the gallery uses them only to display the signed-in user's name and email. They do not authenticate or authorize requests in the application. Keep the service reachable only through the trusted proxy chain, and make sure the proxy overwrites client-supplied identity headers.
 
 ---
 
 ## 📌 Roadmap (TodoList)
 
 - [x] **Docker Containerization:** Create an optimized `Dockerfile` and `docker-compose.yml` to simplify deployment on a server or a Synology NAS (via Container Manager).
-- [ ] **User Management & External Authentication:** Implement an authentication layer (support for an authentication reverse proxy like Authelia / Authentik or OIDC integration) to restrict gallery access.
+- [ ] **Authentication & User Management:** Authentication and account management are intentionally delegated to an external proxy and OIDC provider; the application does not plan to manage user accounts.
 - [ ] **Internationalization (i18n):** Add multi-language support directly into the frontend interface.
 - [ ] **UI / UX Improvements:** 
-  - Add a slideshow mode in the Lightbox.
   - Enable selective or batch downloading of images.
   - Enhance transitions and mobile ergonomics.
 

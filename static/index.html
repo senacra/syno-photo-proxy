@@ -7,6 +7,31 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false" aria-label="Activer le thème sombre" title="Activer le thème sombre">
+        <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"></path>
+        </svg>
+        <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20.5 15.5A8.5 8.5 0 0 1 8.5 3.5a8.6 8.6 0 1 0 12 12Z"></path>
+        </svg>
+    </button>
+
+    <div class="account-widget">
+        <button id="account-toggle" class="account-toggle" type="button" aria-label="Ouvrir le menu du compte" aria-expanded="false" aria-controls="account-menu">
+            <svg id="account-guest-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="8" r="3.5"></circle>
+                <path d="M5 20a7 7 0 0 1 14 0"></path>
+            </svg>
+            <span id="account-avatar" class="hidden" aria-hidden="true"></span>
+        </button>
+        <div id="account-menu" class="account-menu hidden" aria-labelledby="account-name">
+            <p class="account-menu-label">Compte</p>
+            <p id="account-name">Invité</p>
+            <p id="account-email" class="hidden"></p>
+        </div>
+    </div>
+
     <div class="app-container">
         <header>
             <div class="header-left">
@@ -17,13 +42,21 @@
             </div>
         </header>
 
-        <main>
-            <div id="loader" class="hidden">Chargement des souvenirs...</div>
-            
-            <div id="albums-container" class="grid-container"></div>
-            <div id="photos-container" class="grid-container hidden"></div>
-        </main>
+        <div class="app-layout">
+            <main>
+                <div id="loader" class="hidden">Chargement des souvenirs...</div>
+                <div id="albums-container" class="grid-container"></div>
+                <div id="photos-container" class="grid-container hidden"></div>
+            </main>
+
+        </div>
     </div>
+
+    <footer class="site-footer">
+        <span>© Senacra</span>
+        <span aria-hidden="true">·</span>
+        <a href="https://github.com/senacra/syno-photo-proxy" target="_blank" rel="noopener noreferrer">syno-photo-proxy</a>
+    </footer>
 
     <dialog id="rules-dialog" aria-labelledby="rules-title" aria-describedby="rules-description">
         <div class="rules-dialog-content">

@@ -7,6 +7,13 @@ const elements = {
     loader: document.getElementById('loader'),
     albumsContainer: document.getElementById('albums-container'),
     photosContainer: document.getElementById('photos-container'),
+    accountName: document.getElementById('account-name'),
+    accountEmail: document.getElementById('account-email'),
+    accountAvatar: document.getElementById('account-avatar'),
+    accountGuestIcon: document.getElementById('account-guest-icon'),
+    accountToggle: document.getElementById('account-toggle'),
+    accountMenu: document.getElementById('account-menu'),
+    themeToggle: document.getElementById('theme-toggle'),
     lightbox: document.getElementById('lightbox'),
     lightboxImg: document.getElementById('lightbox-img'),
     lightboxClose: document.getElementById('lightbox-close'),
@@ -17,6 +24,7 @@ const elements = {
 
 let galleryTitle = "Galerie Photos";
 const RULES_ACCEPTED_KEY = 'syno-photo-proxy-rules-accepted';
+const THEME_STORAGE_KEY = 'syno-photo-proxy-theme';
 let lightboxPhotos = [];
 let currentPhotoIndex = 0;
 let touchStart = null;
@@ -41,6 +49,87 @@ elements.rulesAccept.onclick = () => {
     }
     elements.rulesDialog.close();
 };
+
+function getActiveTheme() {
+    return document.documentElement.dataset.theme ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+
+function updateThemeToggle() {
+    const activeTheme = getActiveTheme();
+    elements.themeToggle.setAttribute('aria-pressed', String(activeTheme === 'dark'));
+    const action = activeTheme === 'dark' ? 'clair' : 'sombre';
+    elements.themeToggle.setAttribute('aria-label', `Activer le thème ${action}`);
+    elements.themeToggle.title = `Activer le thème ${action}`;
+}
+
+try {
+    const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+        document.documentElement.dataset.theme = savedTheme;
+    }
+} catch (error) {
+    console.error('Impossible de charger le thème enregistré.', error);
+}
+updateThemeToggle();
+
+elements.themeToggle.onclick = () => {
+    const nextTheme = getActiveTheme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = nextTheme;
+    updateThemeToggle();
+    try {
+        localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+    } catch (error) {
+        console.error('Impossible de mémoriser le thème choisi.', error);
+    }
+};
+
+elements.accountToggle.onclick = () => {
+    const isExpanded = elements.accountToggle.getAttribute('aria-expanded') === 'true';
+    elements.accountToggle.setAttribute('aria-expanded', String(!isExpanded));
+    elements.accountMenu.classList.toggle('hidden', isExpanded);
+};
+
+document.addEventListener('click', event => {
+    if (!elements.accountMenu.classList.contains('hidden') &&
+        !elements.accountMenu.contains(event.target) &&
+        !elements.accountToggle.contains(event.target)) {
+        elements.accountMenu.classList.add('hidden');
+        elements.accountToggle.setAttribute('aria-expanded', 'false');
+    }
+});
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !elements.accountMenu.classList.contains('hidden')) {
+        elements.accountMenu.classList.add('hidden');
+        elements.accountToggle.setAttribute('aria-expanded', 'false');
+        elements.accountToggle.focus();
+    }
+});
+
+async function loadUser() {
+    try {
+        const response = await fetch('/api/user');
+        if (!response.ok) throw new Error(`Erreur lors du chargement du compte : ${response.status}`);
+        const user = await response.json();
+
+        if (!user.authenticated) return;
+
+        const displayName = user.name || user.username || user.email || 'Utilisateur';
+        elements.accountName.textContent = displayName;
+        elements.accountAvatar.textContent = displayName.trim().charAt(0).toLocaleUpperCase('fr');
+        elements.accountAvatar.classList.remove('hidden');
+        elements.accountGuestIcon.classList.add('hidden');
+        if (user.email) {
+            elements.accountEmail.textContent = user.email;
+            elements.accountEmail.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Impossible de charger les informations du compte.', error);
+        elements.accountName.textContent = 'Profil indisponible';
+        elements.accountAvatar.textContent = '!';
+    }
+}
 
 async function loadConfig() {
     try {
@@ -207,4 +296,5 @@ document.addEventListener('keydown', event => {
 
 elements.backBtn.onclick = loadAlbums;
 
+loadUser();
 loadConfig().then(() => loadAlbums());
