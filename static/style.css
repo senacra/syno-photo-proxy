@@ -28,7 +28,7 @@ body {
 .app-container {
     flex: 1 0 auto;
     width: 100%;
-    max-width: 1280px;
+    max-width: 1440px;
     margin: 0 auto;
     padding: 60px 40px;
     box-sizing: border-box;
@@ -218,6 +218,34 @@ h1 {
     font-size: 0.8rem;
 }
 
+.account-language {
+    display: grid;
+    gap: 6px;
+    margin-top: 14px;
+    padding-top: 12px;
+    color: light-dark(#656d76, #8b949e);
+    border-top: 1px solid light-dark(#e1e4e8, #30363d);
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.account-language select {
+    width: 100%;
+    padding: 8px 10px;
+    color: light-dark(#1f2328, #e6edf3);
+    background: light-dark(#f6f8fa, #0d1117);
+    border: 1px solid light-dark(#e1e4e8, #30363d);
+    border-radius: 10px;
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.account-language select:focus-visible {
+    outline: 3px solid var(--accent-color);
+    outline-offset: 2px;
+}
+
 #rules-dialog {
     width: min(520px, calc(100% - 32px));
     max-width: none;
@@ -322,7 +350,7 @@ h1 {
 
 .grid-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 30px;
 }
 

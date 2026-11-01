@@ -26,25 +26,35 @@
             <span id="account-avatar" class="hidden" aria-hidden="true"></span>
         </button>
         <div id="account-menu" class="account-menu hidden" aria-labelledby="account-name">
-            <p class="account-menu-label">Compte</p>
-            <p id="account-name">Invité</p>
+            <p class="account-menu-label" data-i18n="account">Compte</p>
+            <p id="account-name" data-i18n="guest">Invité</p>
             <p id="account-email" class="hidden"></p>
+            <label class="account-language">
+                <span data-i18n="language">Choisir la langue</span>
+                <select id="language-select" aria-label="Choisir la langue" title="Choisir la langue">
+                    <option value="fr">Français</option>
+                    <option value="en">English</option>
+                    <option value="es">Español</option>
+                    <option value="de">Deutsch</option>
+                    <option value="pt">Português</option>
+                </select>
+            </label>
         </div>
     </div>
 
     <div class="app-container">
         <header>
             <div class="header-left">
-                <h1 id="main-title">Chargement...</h1>
+                <h1 id="main-title">Galerie Photos</h1>
             </div>
             <div class="header-right">
-                <button id="back-btn" class="hidden">← Retour aux albums</button>
+                <button id="back-btn" class="hidden" data-i18n="backAlbums">← Retour aux albums</button>
             </div>
         </header>
 
         <div class="app-layout">
             <main>
-                <div id="loader" class="hidden">Chargement des souvenirs...</div>
+                <div id="loader" class="hidden" data-i18n="loadingMemories">Chargement des souvenirs...</div>
                 <div id="albums-container" class="grid-container"></div>
                 <div id="photos-container" class="grid-container hidden"></div>
             </main>
@@ -61,32 +71,29 @@
     <dialog id="rules-dialog" aria-labelledby="rules-title" aria-describedby="rules-description">
         <div class="rules-dialog-content">
             <div class="rules-icon" aria-hidden="true">♥</div>
-            <p class="dialog-eyebrow">Un espace privé</p>
-            <h2 id="rules-title">Avant de découvrir les souvenirs</h2>
+            <p class="dialog-eyebrow" data-i18n="rulesEyebrow">Un espace privé</p>
+            <h2 id="rules-title" data-i18n="rulesTitle">Avant de découvrir les souvenirs</h2>
             <div class="rules-introduction" id="rules-description">
                 <p>
-                    Cet espace a été créé pour partager nos souvenirs en toute intimité, <strong>sans intermédiaire commercial ni stockage sur des serveurs tiers</strong>.
+                    <span data-i18n="rulesIntroPrefix">Cet espace a été créé pour partager nos souvenirs en toute intimité,</span>
+                    <strong data-i18n="rulesIntroEmphasis">sans intermédiaire commercial ni stockage sur des serveurs tiers</strong>.
                 </p>
-                <p>
-                    Héberger ses photos sur les réseaux sociaux (Facebook, Instagram, WhatsApp, Snapchat, etc.), c'est confier sa vie privée à des entreprises qui les analysent, les monétisent et s'en servent pour entraîner leurs intelligences artificielles.
-                </p>
-                <p>
-                    Ici, tout reste à la maison, directement sur notre propre matériel.
-                </p>
+                <p data-i18n="rulesSocialNetworks">Héberger ses photos sur les réseaux sociaux (Facebook, Instagram, WhatsApp, Snapchat, etc.), c'est confier sa vie privée à des entreprises qui les analysent, les monétisent et s'en servent pour entraîner leurs intelligences artificielles.</p>
+                <p data-i18n="rulesLocalStorage">Ici, tout reste à la maison, directement sur notre propre matériel.</p>
             </div>
             <div class="rules-notice">
-                <strong>Merci de respecter cette règle :</strong>
-                <p>Ne téléchargez pas les photos pour les réexpédier ou les publier sur les réseaux sociaux ou des applications de messagerie.</p>
+                <strong data-i18n="rulesNoticeTitle">Merci de respecter cette règle :</strong>
+                <p data-i18n="rulesNoticeText">Ne téléchargez pas les photos pour les réexpédier ou les publier sur les réseaux sociaux ou des applications de messagerie.</p>
             </div>
-            <button id="rules-accept" class="primary-button" autofocus>J’accepte les règles et je continue</button>
+            <button id="rules-accept" class="primary-button" data-i18n="rulesAccept" autofocus>J’accepte les règles et je continue</button>
         </div>
     </dialog>
 
     <div id="lightbox" class="hidden">
-        <button id="lightbox-close" class="lightbox-control" type="button" aria-label="Fermer">&times;</button>
-        <button id="lightbox-prev" class="lightbox-control lightbox-nav" type="button" aria-label="Photo précédente">‹</button>
+        <button id="lightbox-close" class="lightbox-control" type="button" aria-label="Fermer" data-i18n-aria-label="lightboxClose">&times;</button>
+        <button id="lightbox-prev" class="lightbox-control lightbox-nav" type="button" aria-label="Photo précédente" data-i18n-aria-label="photoPrevious">‹</button>
         <img id="lightbox-img" src="" alt="Aperçu">
-        <button id="lightbox-next" class="lightbox-control lightbox-nav" type="button" aria-label="Photo suivante">›</button>
+        <button id="lightbox-next" class="lightbox-control lightbox-nav" type="button" aria-label="Photo suivante" data-i18n-aria-label="photoNext">›</button>
         <span id="lightbox-counter" aria-live="polite"></span>
     </div>
 

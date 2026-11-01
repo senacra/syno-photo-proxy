@@ -125,10 +125,11 @@ When oauth2-proxy forwards `X-Forwarded-Preferred-Username` (or `X-Forwarded-Use
 
 - [x] **Docker Containerization:** Create an optimized `Dockerfile` and `docker-compose.yml` to simplify deployment on a server or a Synology NAS (via Container Manager).
 - [x] **Authentication & User Management:** Authentication and account management are intentionally delegated to an external proxy and OIDC provider; the application does not plan to manage user accounts.
-- [ ] **Internationalization (i18n):** Add multi-language support directly into the frontend interface.
+- [x] **Internationalization (i18n):** Frontend available in French, English, Spanish, German, and Portuguese, with the selected language saved in the browser.
 - [ ] **UI / UX Improvements:** 
   - Enable selective or batch downloading of images.
   - Enhance transitions and mobile ergonomics.
+  - Add Exif metadata visualisation and maybe map feature
 
 ---
 
