@@ -17,6 +17,7 @@ const elements = {
     themeToggle: document.getElementById('theme-toggle'),
     lightbox: document.getElementById('lightbox'),
     lightboxImg: document.getElementById('lightbox-img'),
+    lightboxInfo: document.getElementById('lightbox-info'),
     metadataList: document.getElementById('metadata-list'),
     metadataEmpty: document.getElementById('metadata-empty'),
     photoMap: document.getElementById('photo-map'),
@@ -54,6 +55,8 @@ const translations = {
         photoNext: 'Photo suivante',
         photoPreview: 'Aperçu de la photo',
         photoDetails: 'Informations sur la photo',
+        photoInfoShow: 'Afficher les informations de la photo',
+        photoInfoHide: 'Masquer les informations de la photo',
         metadataUnavailable: 'Aucune métadonnée disponible pour cette photo.',
         photoDate: 'Date',
         photoCamera: 'Appareil photo',
@@ -94,6 +97,8 @@ const translations = {
         photoNext: 'Next photo',
         photoPreview: 'Photo preview',
         photoDetails: 'Photo details',
+        photoInfoShow: 'Show photo details',
+        photoInfoHide: 'Hide photo details',
         metadataUnavailable: 'No metadata is available for this photo.',
         photoDate: 'Date',
         photoCamera: 'Camera',
@@ -134,6 +139,8 @@ const translations = {
         photoNext: 'Foto siguiente',
         photoPreview: 'Vista previa de la foto',
         photoDetails: 'Información de la foto',
+        photoInfoShow: 'Mostrar información de la foto',
+        photoInfoHide: 'Ocultar información de la foto',
         metadataUnavailable: 'No hay metadatos disponibles para esta foto.',
         photoDate: 'Fecha',
         photoCamera: 'Cámara',
@@ -174,6 +181,8 @@ const translations = {
         photoNext: 'Nächstes Foto',
         photoPreview: 'Fotovorschau',
         photoDetails: 'Fotoinformationen',
+        photoInfoShow: 'Fotoinformationen anzeigen',
+        photoInfoHide: 'Fotoinformationen ausblenden',
         metadataUnavailable: 'Für dieses Foto sind keine Metadaten verfügbar.',
         photoDate: 'Datum',
         photoCamera: 'Kamera',
@@ -214,6 +223,8 @@ const translations = {
         photoNext: 'Fotografia seguinte',
         photoPreview: 'Pré-visualização da fotografia',
         photoDetails: 'Informações da fotografia',
+        photoInfoShow: 'Mostrar informações da fotografia',
+        photoInfoHide: 'Ocultar informações da fotografia',
         metadataUnavailable: 'Não existem metadados disponíveis para esta fotografia.',
         photoDate: 'Data',
         photoCamera: 'Câmara',
@@ -313,6 +324,11 @@ function applyLanguage() {
     document.querySelectorAll('[data-i18n-aria-label]').forEach(element => {
         element.setAttribute('aria-label', translate(element.dataset.i18nAriaLabel));
     });
+    const metadataIsOpen = elements.lightboxInfo.getAttribute('aria-expanded') === 'true';
+    elements.lightboxInfo.setAttribute(
+        'aria-label',
+        translate(metadataIsOpen ? 'photoInfoHide' : 'photoInfoShow')
+    );
 
     if (!hasCustomGalleryTitle) galleryTitle = translate('defaultGalleryTitle');
     updateGalleryTitles();
@@ -530,12 +546,14 @@ async function loadPhotos(albumId, albumName) {
         card.className = 'card';
         card.onclick = () => openLightbox(photoIndex);
         card.innerHTML = `<div class="card-img-wrapper"><img src="${imgUrl}" loading="lazy" alt="${photo.filename}"></div>`;
+        card.querySelector('img').draggable = false;
         elements.photosContainer.appendChild(card);
     });
 }
 
 function openLightbox(index) {
     currentPhotoIndex = index;
+    setPhotoMetadataOpen(false);
     updateLightboxPhoto();
     elements.lightbox.classList.remove('hidden');
 }
@@ -723,13 +741,18 @@ function loadLeaflet() {
     return leafletLoadPromise;
 }
 
-function updatePhotoMap(gps) {
+function updatePhotoMap(gps, isVisible) {
     elements.mapError.classList.add('hidden');
     if (!gps) {
         elements.photoMap.classList.add('hidden');
         photoMap?.remove();
         photoMap = null;
         photoMapMarker = null;
+        return;
+    }
+
+    if (!isVisible) {
+        elements.photoMap.classList.add('hidden');
         return;
     }
 
@@ -771,7 +794,9 @@ function renderPhotoMetadata(photo) {
         elements.metadataList.append(label, description);
     }
     elements.metadataEmpty.classList.toggle('hidden', metadata.rows.length > 0);
-    updatePhotoMap(metadata.gps);
+    const metadataVisible = !window.matchMedia('(max-width: 760px)').matches ||
+        elements.lightbox.classList.contains('metadata-open');
+    updatePhotoMap(metadata.gps, metadataVisible);
 }
 
 function updateLightboxPhoto() {
@@ -785,6 +810,19 @@ function updateLightboxPhoto() {
     elements.lightboxNext.disabled = currentPhotoIndex === lightboxPhotos.length - 1;
     const numberFormatter = new Intl.NumberFormat(currentLanguage);
     elements.lightboxCounter.textContent = `${numberFormatter.format(currentPhotoIndex + 1)} / ${numberFormatter.format(lightboxPhotos.length)}`;
+}
+
+function setPhotoMetadataOpen(isOpen) {
+    elements.lightbox.classList.toggle('metadata-open', isOpen);
+    elements.lightboxInfo.setAttribute('aria-expanded', String(isOpen));
+    elements.lightboxInfo.setAttribute(
+        'aria-label',
+        translate(isOpen ? 'photoInfoHide' : 'photoInfoShow')
+    );
+
+    if (window.matchMedia('(max-width: 760px)').matches) {
+        updatePhotoMap(getPhotoGps(lightboxPhotos[currentPhotoIndex]?.metadata), isOpen);
+    }
 }
 
 function showPreviousPhoto() {
@@ -804,6 +842,7 @@ function showNextPhoto() {
 function closeLightbox() {
     elements.lightbox.classList.add('hidden');
     elements.lightboxImg.src = '';
+    setPhotoMetadataOpen(false);
     photoMap?.remove();
     photoMap = null;
     photoMapMarker = null;
@@ -811,6 +850,10 @@ function closeLightbox() {
 
 elements.lightboxClose.onclick = () => {
     closeLightbox();
+};
+elements.lightboxInfo.onclick = () => {
+    const isOpen = elements.lightboxInfo.getAttribute('aria-expanded') === 'true';
+    setPhotoMetadataOpen(!isOpen);
 };
 elements.lightboxPrev.onclick = showPreviousPhoto;
 elements.lightboxNext.onclick = showNextPhoto;
@@ -836,6 +879,17 @@ elements.lightbox.addEventListener('pointerup', event => {
 elements.lightbox.addEventListener('pointercancel', () => {
     touchStart = null;
 });
+
+elements.photosContainer.addEventListener('contextmenu', event => {
+    if (event.target instanceof Element && event.target.closest('img')) {
+        event.preventDefault();
+    }
+});
+elements.photosContainer.addEventListener('dragstart', event => {
+    if (event.target instanceof HTMLImageElement) event.preventDefault();
+});
+elements.lightboxImg.addEventListener('contextmenu', event => event.preventDefault());
+elements.lightboxImg.addEventListener('dragstart', event => event.preventDefault());
 
 document.addEventListener('keydown', event => {
     if (elements.lightbox.classList.contains('hidden')) return;

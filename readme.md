@@ -33,6 +33,7 @@ The fullscreen viewer can show a photo alongside its available EXIF details:
 * **Restricted Account** Uses a dedicated local account with minimal permissions. The system handles album sharing (including albums shared with the account without it being the initial creator) using memory-mapped IDs (`secure_xxx`).
 * **Optimized Streaming:** Images and thumbnails are streamed on-the-fly from the NAS to the client with HTTP cache headers (`Cache-Control`) to reduce bandwidth and server load.
 * **Photo details:** The fullscreen viewer can display available EXIF information and an OpenStreetMap map for photos with GPS coordinates.
+* **Casual download deterrence:** Image context menus and drag-and-drop are disabled in the gallery. This is not access control: displayed images can still be saved by other means or captured with a screenshot.
 
 Opening a GPS map loads Leaflet assets from unpkg.com and map tiles from OpenStreetMap tile servers. Both services receive the visitor's IP address; the map tile requests also reveal the approximate area being viewed to OpenStreetMap. No map tiles are requested for photos without GPS coordinates.
 

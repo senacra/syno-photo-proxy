@@ -91,9 +91,15 @@
 
     <div id="lightbox" class="hidden">
         <button id="lightbox-close" class="lightbox-control" type="button" aria-label="Fermer" data-i18n-aria-label="lightboxClose">&times;</button>
+        <button id="lightbox-info" class="lightbox-control" type="button" aria-label="Afficher les informations de la photo" data-i18n-aria-label="photoInfoShow" aria-expanded="false" aria-controls="photo-metadata">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M12 11v5m0-8h.01"></path>
+            </svg>
+        </button>
         <button id="lightbox-prev" class="lightbox-control lightbox-nav" type="button" aria-label="Photo précédente" data-i18n-aria-label="photoPrevious">‹</button>
         <div id="lightbox-content">
-            <img id="lightbox-img" src="" alt="Aperçu">
+            <img id="lightbox-img" src="" alt="Aperçu" draggable="false">
             <aside id="photo-metadata" aria-labelledby="photo-metadata-title">
                 <h2 id="photo-metadata-title" data-i18n="photoDetails">Informations sur la photo</h2>
                 <dl id="metadata-list"></dl>
