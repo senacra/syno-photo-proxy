@@ -35,8 +35,11 @@ The fullscreen viewer can show a photo alongside its available EXIF details:
 * **Photo details:** The fullscreen viewer can display available EXIF information and an OpenStreetMap map for photos with GPS coordinates.
 * **Casual download deterrence:** Image context menus and drag-and-drop are disabled in the gallery. This is not access control: displayed images can still be saved by other means or captured with a screenshot.
 
-> [!WARNING] **Privacy**
-> When enabled, the map uses coordinates rounded to one decimal place and a reduced zoom level; it does not place the exact GPS point. Opening it loads Leaflet from unpkg.com and map tiles from OpenStreetMap tile servers. These services receive the visitor's IP address, and OpenStreetMap can infer the approximate area from requested tiles. Set `PHOTO_MAP_ENABLED=false` in `.env` to disable the map and omit GPS/address metadata from the photo API response; no map assets or tiles are then requested. Set it to `true` to enable the map. This setting does not modify the image bytes themselves, which may contain embedded metadata.
+> [!WARNING]
+> **Privacy notice**
+> When enabled, the map uses coordinates rounded to one decimal place and a reduced zoom level; it does not place the exact GPS point. Opening it loads Leaflet from unpkg.com and map tiles from OpenStreetMap tile servers. These services receive the visitor's IP address, and OpenStreetMap can infer the approximate area from requested tiles.
+>
+> Set `PHOTO_MAP_ENABLED=false` in `.env` to disable the map and omit GPS/address metadata from the photo API response; no map assets or tiles are then requested. Set it to `true` to enable the map. This setting does not modify the image bytes itself, which may contain embedded metadata.
 
 ---
 
