@@ -443,10 +443,72 @@ h1 {
 }
 
 #lightbox-img {
-    max-width: 90%;
-    max-height: 90vh;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    max-height: 88vh;
     object-fit: contain;
     touch-action: pan-y;
+}
+
+#lightbox-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    width: min(1400px, calc(100vw - 150px));
+    max-height: 90vh;
+}
+
+#photo-metadata {
+    flex: 0 0 300px;
+    max-height: 84vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 20px;
+    color: #e6edf3;
+    background: rgba(22, 27, 34, 0.96);
+    border: 1px solid #30363d;
+    border-radius: 12px;
+}
+
+#photo-metadata h2 {
+    margin: 0 0 16px;
+    font-size: 1.05rem;
+    line-height: 1.35;
+}
+
+#metadata-list {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 3px;
+    margin: 0;
+}
+
+#metadata-list dt {
+    color: #8b949e;
+    font-size: 0.75rem;
+}
+
+#metadata-list dd {
+    margin: 0 0 8px;
+    overflow-wrap: anywhere;
+    font-size: 0.9rem;
+}
+
+#metadata-empty,
+#map-error {
+    color: #8b949e;
+    font-size: 0.85rem;
+}
+
+#photo-map {
+    height: 210px;
+    width: 100%;
+    margin-top: 16px;
+    border-radius: 8px;
+    background: #d1d5db;
+    z-index: 0;
 }
 
 .lightbox-control {
@@ -575,6 +637,39 @@ h1 {
         height: 40px;
     }
 
+    #lightbox {
+        overflow-y: auto;
+        align-items: flex-start;
+    }
+
+    #lightbox-content {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        gap: 12px;
+        width: calc(100vw - 32px);
+        max-height: none;
+        margin: 54px auto 50px;
+    }
+
+    #lightbox-img {
+        flex: 0 0 auto;
+        width: 100%;
+        max-height: 48vh;
+    }
+
+    #photo-metadata {
+        flex: 0 0 auto;
+        width: 100%;
+        max-height: none;
+        overflow: visible;
+        padding: 16px;
+    }
+
+    #photo-map {
+        height: 170px;
+    }
+
     #photos-container {
         grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
     }
@@ -609,6 +704,38 @@ h1 {
 @media (max-height: 600px) {
     .rules-dialog-content {
         padding: 20px 24px;
+    }
+
+    @media (min-width: 601px) and (max-width: 760px) {
+        #lightbox-content {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 12px;
+            width: calc(100vw - 96px);
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 48px 0 50px;
+            box-sizing: border-box;
+        }
+
+        #lightbox-img {
+            flex: 0 0 auto;
+            width: 100%;
+            max-height: 50vh;
+        }
+
+        #photo-metadata {
+            flex: 0 0 auto;
+            width: 100%;
+            max-height: none;
+            overflow: visible;
+            padding: 16px;
+        }
+
+        #photo-map {
+            height: 170px;
+        }
+
     }
 
     .rules-icon {

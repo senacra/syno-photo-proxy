@@ -19,6 +19,12 @@ The previews below use illustrative placeholder images and a fictitious account.
   <img src="docs/screenshots/mobile.png" alt="syno-photo-proxy mobile preview" width="260">
 </p>
 
+The fullscreen viewer can show a photo alongside its available EXIF details:
+
+<p align="center">
+  <img src="docs/screenshots/photo-details.svg" alt="Illustrative fullscreen photo viewer with EXIF details beside a mountain lake photo" width="90%">
+</p>
+
 ---
 
 ## 🛡️ Security & Architecture
@@ -26,6 +32,9 @@ The previews below use illustrative placeholder images and a fictitious account.
 * **Total Isolation:** The Synology NAS hosting your photos remains completely isolated from the web. Only this proxy service (FastAPI) is publicly accessible.
 * **Restricted Account** Uses a dedicated local account with minimal permissions. The system handles album sharing (including albums shared with the account without it being the initial creator) using memory-mapped IDs (`secure_xxx`).
 * **Optimized Streaming:** Images and thumbnails are streamed on-the-fly from the NAS to the client with HTTP cache headers (`Cache-Control`) to reduce bandwidth and server load.
+* **Photo details:** The fullscreen viewer can display available EXIF information and an OpenStreetMap map for photos with GPS coordinates.
+
+Opening a GPS map loads Leaflet assets from unpkg.com and map tiles from OpenStreetMap tile servers. Both services receive the visitor's IP address; the map tile requests also reveal the approximate area being viewed to OpenStreetMap. No map tiles are requested for photos without GPS coordinates.
 
 ---
 
@@ -126,10 +135,8 @@ When oauth2-proxy forwards `X-Forwarded-Preferred-Username` (or `X-Forwarded-Use
 - [x] **Docker Containerization:** Create an optimized `Dockerfile` and `docker-compose.yml` to simplify deployment on a server or a Synology NAS (via Container Manager).
 - [x] **Authentication & User Management:** Authentication and account management are intentionally delegated to an external proxy and OIDC provider; the application does not plan to manage user accounts.
 - [x] **Internationalization (i18n):** Frontend available in French, English, Spanish, German, and Portuguese, with the selected language saved in the browser.
-- [ ] **UI / UX Improvements:** 
-  - Enable selective or batch downloading of images.
-  - Enhance transitions and mobile ergonomics.
-  - Add Exif metadata visualisation and maybe map feature
+- [ ] **UI / UX Improvements:** Enable selective or batch downloading of images and enhance transitions and mobile ergonomics.
+- [x] **Photo Metadata & Map:** Display available EXIF details and show an OpenStreetMap map when a photo contains GPS coordinates.
 
 ---
 

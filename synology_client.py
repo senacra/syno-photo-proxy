@@ -101,7 +101,7 @@ class SynologyPhotosAPI:
         kwargs = {
             "offset": 0,
             "limit": 500,
-            "additional": '["thumbnail"]' 
+            "additional": '["thumbnail","exif","gps","address","resolution"]'
         }
         
         # Récupération de la passphrase via l'ID sécurisé

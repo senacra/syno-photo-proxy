@@ -3,7 +3,7 @@ version: '3.8'
 services:
   syno-photo-proxy:
     build: .
-    image: senacra/syno-photo-proxy:1.0.0
+    image: senacra/syno-photo-proxy:1.2.0
     container_name: syno-photo-proxy
     restart: unless-stopped
     ports:

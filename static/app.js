@@ -17,6 +17,10 @@ const elements = {
     themeToggle: document.getElementById('theme-toggle'),
     lightbox: document.getElementById('lightbox'),
     lightboxImg: document.getElementById('lightbox-img'),
+    metadataList: document.getElementById('metadata-list'),
+    metadataEmpty: document.getElementById('metadata-empty'),
+    photoMap: document.getElementById('photo-map'),
+    mapError: document.getElementById('map-error'),
     lightboxClose: document.getElementById('lightbox-close'),
     lightboxPrev: document.getElementById('lightbox-prev'),
     lightboxNext: document.getElementById('lightbox-next'),
@@ -49,6 +53,19 @@ const translations = {
         photoPrevious: 'Photo précédente',
         photoNext: 'Photo suivante',
         photoPreview: 'Aperçu de la photo',
+        photoDetails: 'Informations sur la photo',
+        metadataUnavailable: 'Aucune métadonnée disponible pour cette photo.',
+        photoDate: 'Date',
+        photoCamera: 'Appareil photo',
+        photoLens: 'Objectif',
+        photoAperture: 'Ouverture',
+        photoExposure: 'Exposition',
+        photoIso: 'ISO',
+        photoFocalLength: 'Longueur focale',
+        photoResolution: 'Dimensions',
+        photoLocation: 'Position GPS',
+        photoMap: 'Carte indiquant la position de la photo',
+        mapUnavailable: 'La carte n’a pas pu être chargée.',
         requestError: 'Erreur : {status}'
     },
     en: {
@@ -76,6 +93,19 @@ const translations = {
         photoPrevious: 'Previous photo',
         photoNext: 'Next photo',
         photoPreview: 'Photo preview',
+        photoDetails: 'Photo details',
+        metadataUnavailable: 'No metadata is available for this photo.',
+        photoDate: 'Date',
+        photoCamera: 'Camera',
+        photoLens: 'Lens',
+        photoAperture: 'Aperture',
+        photoExposure: 'Exposure',
+        photoIso: 'ISO',
+        photoFocalLength: 'Focal length',
+        photoResolution: 'Dimensions',
+        photoLocation: 'GPS location',
+        photoMap: 'Map showing the photo location',
+        mapUnavailable: 'The map could not be loaded.',
         requestError: 'Error: {status}'
     },
     es: {
@@ -103,6 +133,19 @@ const translations = {
         photoPrevious: 'Foto anterior',
         photoNext: 'Foto siguiente',
         photoPreview: 'Vista previa de la foto',
+        photoDetails: 'Información de la foto',
+        metadataUnavailable: 'No hay metadatos disponibles para esta foto.',
+        photoDate: 'Fecha',
+        photoCamera: 'Cámara',
+        photoLens: 'Objetivo',
+        photoAperture: 'Apertura',
+        photoExposure: 'Exposición',
+        photoIso: 'ISO',
+        photoFocalLength: 'Distancia focal',
+        photoResolution: 'Dimensiones',
+        photoLocation: 'Ubicación GPS',
+        photoMap: 'Mapa con la ubicación de la foto',
+        mapUnavailable: 'No se pudo cargar el mapa.',
         requestError: 'Error: {status}'
     },
     de: {
@@ -130,6 +173,19 @@ const translations = {
         photoPrevious: 'Vorheriges Foto',
         photoNext: 'Nächstes Foto',
         photoPreview: 'Fotovorschau',
+        photoDetails: 'Fotoinformationen',
+        metadataUnavailable: 'Für dieses Foto sind keine Metadaten verfügbar.',
+        photoDate: 'Datum',
+        photoCamera: 'Kamera',
+        photoLens: 'Objektiv',
+        photoAperture: 'Blende',
+        photoExposure: 'Belichtung',
+        photoIso: 'ISO',
+        photoFocalLength: 'Brennweite',
+        photoResolution: 'Abmessungen',
+        photoLocation: 'GPS-Position',
+        photoMap: 'Karte mit dem Standort des Fotos',
+        mapUnavailable: 'Die Karte konnte nicht geladen werden.',
         requestError: 'Fehler: {status}'
     },
     pt: {
@@ -157,6 +213,19 @@ const translations = {
         photoPrevious: 'Fotografia anterior',
         photoNext: 'Fotografia seguinte',
         photoPreview: 'Pré-visualização da fotografia',
+        photoDetails: 'Informações da fotografia',
+        metadataUnavailable: 'Não existem metadados disponíveis para esta fotografia.',
+        photoDate: 'Data',
+        photoCamera: 'Câmara',
+        photoLens: 'Objetiva',
+        photoAperture: 'Abertura',
+        photoExposure: 'Exposição',
+        photoIso: 'ISO',
+        photoFocalLength: 'Distância focal',
+        photoResolution: 'Dimensões',
+        photoLocation: 'Localização GPS',
+        photoMap: 'Mapa com a localização da fotografia',
+        mapUnavailable: 'Não foi possível carregar o mapa.',
         requestError: 'Erro: {status}'
     }
 };
@@ -173,6 +242,9 @@ const THEME_STORAGE_KEY = 'syno-photo-proxy-theme';
 let lightboxPhotos = [];
 let currentPhotoIndex = 0;
 let touchStart = null;
+let photoMap = null;
+let photoMapMarker = null;
+let leafletLoadPromise = null;
 
 try {
     const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
@@ -448,7 +520,11 @@ async function loadPhotos(albumId, albumName) {
         const imgUrl = `/api/images/${photo.id}?${paramsSm.toString()}`;
         const highResUrl = `/api/images/${photo.id}?${paramsXl.toString()}`;
         const photoIndex = lightboxPhotos.length;
-        lightboxPhotos.push({ url: highResUrl, alt: photo.filename || translate('photoPreview') });
+        lightboxPhotos.push({
+            url: highResUrl,
+            alt: photo.filename || translate('photoPreview'),
+            metadata: photo
+        });
         
         const card = document.createElement('div');
         card.className = 'card';
@@ -464,12 +540,247 @@ function openLightbox(index) {
     elements.lightbox.classList.remove('hidden');
 }
 
+function getValue(object, names) {
+    if (!object || typeof object !== 'object') return undefined;
+    const entries = new Map(Object.entries(object).map(([key, value]) => [key.toLowerCase().replaceAll(/[_\s-]/g, ''), value]));
+    for (const name of names) {
+        const value = entries.get(name.toLowerCase().replaceAll(/[_\s-]/g, ''));
+        if (value !== undefined && value !== null && value !== '') return value;
+    }
+    return undefined;
+}
+
+function parseExifNumber(value) {
+    if (typeof value === 'number' && Number.isFinite(value)) return value;
+    if (typeof value === 'string') {
+        const fraction = value.match(/^\s*(-?\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)\s*$/);
+        if (fraction) return Number(fraction[1]) / Number(fraction[2]);
+        const number = Number(value);
+        return Number.isFinite(number) ? number : null;
+    }
+    if (Array.isArray(value) && value.length === 2) {
+        const numerator = parseExifNumber(value[0]);
+        const denominator = parseExifNumber(value[1]);
+        return numerator !== null && denominator ? numerator / denominator : null;
+    }
+    if (value && typeof value === 'object') {
+        const numerator = getValue(value, ['numerator', 'num']);
+        const denominator = getValue(value, ['denominator', 'den']);
+        if (numerator !== undefined && denominator !== undefined) {
+            const parsedNumerator = parseExifNumber(numerator);
+            const parsedDenominator = parseExifNumber(denominator);
+            return parsedNumerator !== null && parsedDenominator ? parsedNumerator / parsedDenominator : null;
+        }
+    }
+    return null;
+}
+
+function parseCoordinate(value, reference, isLatitude) {
+    let coordinate;
+    if (Array.isArray(value) && value.length >= 3) {
+        const degrees = parseExifNumber(value[0]);
+        const minutes = parseExifNumber(value[1]);
+        const seconds = parseExifNumber(value[2]);
+        if (degrees === null || minutes === null || seconds === null) return null;
+        coordinate = Math.abs(degrees) + minutes / 60 + seconds / 3600;
+        if (degrees < 0) coordinate *= -1;
+    } else {
+        coordinate = parseExifNumber(value);
+    }
+    if (coordinate === null) return null;
+
+    const direction = typeof reference === 'string' ? reference.trim().toUpperCase() : '';
+    if (direction === 'S' || direction === 'W') coordinate = -Math.abs(coordinate);
+    if (direction === 'N' || direction === 'E') coordinate = Math.abs(coordinate);
+    const max = isLatitude ? 90 : 180;
+    return Math.abs(coordinate) <= max ? coordinate : null;
+}
+
+function getPhotoGps(photo) {
+    if (!photo || typeof photo !== 'object') return null;
+    const additional = photo.additional || {};
+    const exif = additional.exif || photo.exif || {};
+    const gps = additional.gps || exif.gps || photo.gps || {};
+    const latitudeValue = getValue(gps, ['latitude', 'lat', 'gpslatitude']) ??
+        getValue(exif, ['gpslatitude', 'latitude']);
+    const longitudeValue = getValue(gps, ['longitude', 'lon', 'lng', 'gpslongitude']) ??
+        getValue(exif, ['gpslongitude', 'longitude']);
+    const latitudeReference = getValue(gps, ['latitude_ref', 'lat_ref', 'gpslatituderef']) ??
+        getValue(exif, ['gpslatituderef', 'latitude_ref']);
+    const longitudeReference = getValue(gps, ['longitude_ref', 'lon_ref', 'gpslongituderef']) ??
+        getValue(exif, ['gpslongituderef', 'longitude_ref']);
+    const latitude = parseCoordinate(latitudeValue, latitudeReference, true);
+    const longitude = parseCoordinate(longitudeValue, longitudeReference, false);
+
+    return latitude === null || longitude === null ? null : { latitude, longitude };
+}
+
+function formatPhotoDate(value) {
+    if (value === undefined) return null;
+    let date;
+    if (typeof value === 'number' || /^\d+(?:\.\d+)?$/.test(String(value))) {
+        const timestamp = Number(value);
+        date = new Date(timestamp < 100000000000 ? timestamp * 1000 : timestamp);
+    } else {
+        const normalized = String(value).replace(
+            /^(\d{4}):(\d{2}):(\d{2})/,
+            '$1-$2-$3'
+        );
+        date = new Date(normalized);
+    }
+    return Number.isNaN(date.getTime())
+        ? String(value)
+        : new Intl.DateTimeFormat(currentLanguage, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+}
+
+function formatPhotoResolution(value) {
+    if (!value) return null;
+    if (typeof value === 'string') return value;
+    if (Array.isArray(value) && value.length >= 2) return `${value[0]} × ${value[1]}`;
+    const width = getValue(value, ['width', 'w']);
+    const height = getValue(value, ['height', 'h']);
+    return width && height ? `${width} × ${height}` : null;
+}
+
+function formatExifValue(value) {
+    if (typeof value === 'number' || typeof value === 'string') return value;
+    if (Array.isArray(value) && value.length === 2) {
+        const number = parseExifNumber(value);
+        return number === null ? null : number;
+    }
+    if (value && typeof value === 'object') {
+        const number = parseExifNumber(value);
+        if (number !== null) return number;
+        return getValue(value, ['value', 'description']);
+    }
+    return null;
+}
+
+function buildPhotoMetadata(photo) {
+    const additional = photo.additional || {};
+    const exif = additional.exif || photo.exif || {};
+    const resolution = additional.resolution || photo.resolution;
+    const gps = getPhotoGps(photo);
+    const address = additional.address || photo.address || {};
+    const location = gps
+        ? `${gps.latitude.toFixed(5)}, ${gps.longitude.toFixed(5)}`
+        : [getValue(address, ['city']), getValue(address, ['state', 'region']), getValue(address, ['country'])]
+            .filter(Boolean)
+            .join(', ');
+    const date = getValue(exif, ['datetimeoriginal', 'date_time_original', 'datetime', 'date_time']) ??
+        getValue(photo, ['time', 'date', 'created_time']);
+    const dimensions = formatPhotoResolution(resolution) ||
+        formatPhotoResolution(getValue(exif, ['resolution', 'dimensions']));
+
+    return {
+        gps,
+        rows: [
+            ['photoDate', formatPhotoDate(date)],
+            ['photoCamera', formatExifValue(getValue(exif, ['camera', 'camera_model', 'model']))],
+            ['photoLens', formatExifValue(getValue(exif, ['lens', 'lens_model']))],
+            ['photoAperture', formatExifValue(getValue(exif, ['aperture', 'f_number', 'fnumber']))],
+            ['photoExposure', formatExifValue(getValue(exif, ['exposure_time', 'exposuretime', 'exposure']))],
+            ['photoIso', formatExifValue(getValue(exif, ['iso', 'isospeedratings']))],
+            ['photoFocalLength', formatExifValue(getValue(exif, ['focal_length', 'focallength']))],
+            ['photoResolution', dimensions],
+            ['photoLocation', location]
+        ].filter(([, value]) => value !== undefined && value !== null && value !== '')
+    };
+}
+
+function loadLeaflet() {
+    if (window.L) return Promise.resolve();
+    if (leafletLoadPromise) return leafletLoadPromise;
+
+    leafletLoadPromise = new Promise((resolve, reject) => {
+        let loadedAssets = 0;
+        const assetLoaded = () => {
+            loadedAssets += 1;
+            if (loadedAssets === 2) resolve();
+        };
+        const assetFailed = () => reject(new Error('Impossible de charger les ressources de la carte Leaflet.'));
+        const stylesheet = document.createElement('link');
+        stylesheet.rel = 'stylesheet';
+        stylesheet.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        stylesheet.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+        stylesheet.crossOrigin = 'anonymous';
+        stylesheet.onload = assetLoaded;
+        stylesheet.onerror = assetFailed;
+        document.head.appendChild(stylesheet);
+
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
+        script.crossOrigin = 'anonymous';
+        script.onload = assetLoaded;
+        script.onerror = assetFailed;
+        document.head.appendChild(script);
+    }).catch(error => {
+        leafletLoadPromise = null;
+        throw error;
+    });
+
+    return leafletLoadPromise;
+}
+
+function updatePhotoMap(gps) {
+    elements.mapError.classList.add('hidden');
+    if (!gps) {
+        elements.photoMap.classList.add('hidden');
+        photoMap?.remove();
+        photoMap = null;
+        photoMapMarker = null;
+        return;
+    }
+
+    elements.photoMap.classList.remove('hidden');
+    loadLeaflet().then(() => {
+        if (elements.lightbox.classList.contains('hidden') ||
+            getPhotoGps(lightboxPhotos[currentPhotoIndex]?.metadata)?.latitude !== gps.latitude ||
+            getPhotoGps(lightboxPhotos[currentPhotoIndex]?.metadata)?.longitude !== gps.longitude) return;
+
+        if (!photoMap) {
+            photoMap = window.L.map(elements.photoMap, { scrollWheelZoom: false, dragging: true })
+                .setView([gps.latitude, gps.longitude], 13);
+            const tileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(photoMap);
+            tileLayer.on('tileerror', () => elements.mapError.classList.remove('hidden'));
+            photoMapMarker = window.L.marker([gps.latitude, gps.longitude]).addTo(photoMap);
+        } else {
+            photoMap.setView([gps.latitude, gps.longitude], 13);
+            photoMapMarker.setLatLng([gps.latitude, gps.longitude]);
+        }
+        requestAnimationFrame(() => photoMap?.invalidateSize());
+    }).catch(error => {
+        console.error('Impossible de charger la carte de la photo.', error);
+        elements.photoMap.classList.add('hidden');
+        elements.mapError.classList.remove('hidden');
+    });
+}
+
+function renderPhotoMetadata(photo) {
+    const metadata = buildPhotoMetadata(photo);
+    elements.metadataList.replaceChildren();
+    for (const [labelKey, value] of metadata.rows) {
+        const label = document.createElement('dt');
+        label.textContent = translate(labelKey);
+        const description = document.createElement('dd');
+        description.textContent = String(value);
+        elements.metadataList.append(label, description);
+    }
+    elements.metadataEmpty.classList.toggle('hidden', metadata.rows.length > 0);
+    updatePhotoMap(metadata.gps);
+}
+
 function updateLightboxPhoto() {
     const photo = lightboxPhotos[currentPhotoIndex];
     if (!photo) return;
 
     elements.lightboxImg.src = photo.url;
     elements.lightboxImg.alt = photo.alt;
+    renderPhotoMetadata(photo.metadata);
     elements.lightboxPrev.disabled = currentPhotoIndex === 0;
     elements.lightboxNext.disabled = currentPhotoIndex === lightboxPhotos.length - 1;
     const numberFormatter = new Intl.NumberFormat(currentLanguage);
@@ -493,6 +804,9 @@ function showNextPhoto() {
 function closeLightbox() {
     elements.lightbox.classList.add('hidden');
     elements.lightboxImg.src = '';
+    photoMap?.remove();
+    photoMap = null;
+    photoMapMarker = null;
 }
 
 elements.lightboxClose.onclick = () => {

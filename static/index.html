@@ -92,7 +92,16 @@
     <div id="lightbox" class="hidden">
         <button id="lightbox-close" class="lightbox-control" type="button" aria-label="Fermer" data-i18n-aria-label="lightboxClose">&times;</button>
         <button id="lightbox-prev" class="lightbox-control lightbox-nav" type="button" aria-label="Photo précédente" data-i18n-aria-label="photoPrevious">‹</button>
-        <img id="lightbox-img" src="" alt="Aperçu">
+        <div id="lightbox-content">
+            <img id="lightbox-img" src="" alt="Aperçu">
+            <aside id="photo-metadata" aria-labelledby="photo-metadata-title">
+                <h2 id="photo-metadata-title" data-i18n="photoDetails">Informations sur la photo</h2>
+                <dl id="metadata-list"></dl>
+                <p id="metadata-empty" data-i18n="metadataUnavailable">Aucune métadonnée disponible pour cette photo.</p>
+                <p id="map-error" class="hidden" data-i18n="mapUnavailable">La carte n’a pas pu être chargée.</p>
+                <div id="photo-map" class="hidden" role="region" aria-label="Carte indiquant la position de la photo" data-i18n-aria-label="photoMap"></div>
+            </aside>
+        </div>
         <button id="lightbox-next" class="lightbox-control lightbox-nav" type="button" aria-label="Photo suivante" data-i18n-aria-label="photoNext">›</button>
         <span id="lightbox-counter" aria-live="polite"></span>
     </div>
