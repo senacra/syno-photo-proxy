@@ -7,6 +7,18 @@
 
 A lightweight web service based on a **BFF (Backend-For-Frontend)** architecture to securely expose specific photo albums from a Synology NAS on the internet, without directly exposing the NAS itself.
 
+## 🖼️ UI Preview
+
+The previews below use illustrative placeholder images and a fictitious account.
+
+<p align="center">
+  <img src="docs/screenshots/desktop.png" alt="syno-photo-proxy desktop preview" width="49%">
+  <img src="docs/screenshots/profile-open.png" alt="syno-photo-proxy desktop preview with the account menu open" width="49%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/mobile.png" alt="syno-photo-proxy mobile preview" width="260">
+</p>
+
 ---
 
 ## 🛡️ Security & Architecture
