@@ -1,4 +1,5 @@
 import httpx
+import hashlib
 import uuid
 from typing import List, Optional
 
@@ -9,6 +10,7 @@ class SynologyPhotosAPI:
         self.password = password
         self.client = httpx.AsyncClient(verify=False) # Désactiver verify si HTTPS local auto-signé
         self.sid = None
+        self.photo_download_versions = {}
         
         # Dictionnaire secret en mémoire : { "secure_abc123": "vraie_passphrase_secrete" }
         self.album_passphrase_map = {}
@@ -149,6 +151,72 @@ class SynologyPhotosAPI:
             
         request = self.client.build_request("GET", url, params=params)
         return await self.client.send(request, stream=True)
+
+    def get_image_cache_scope(self, album_id: str = None) -> str:
+        real_passphrase = self.album_passphrase_map.get(album_id)
+        if real_passphrase:
+            return hashlib.sha256(real_passphrase.encode("utf-8")).hexdigest()
+        return str(album_id or "")
+
+    async def stream_video(
+        self,
+        item_id: str,
+        cache_key: str,
+        album_id: str = None,
+        range_header: str = None,
+        owner_user_id: str = None,
+    ):
+        numeric_item_id = int(item_id)
+        if numeric_item_id < 1:
+            raise ValueError("Identifiant de vidéo invalide")
+
+        api = "SYNO.FotoTeam.Download" if str(owner_user_id) == "0" else "SYNO.Foto.Download"
+        version = await self._get_photo_download_version(api)
+        url = f"{self.base_url}/webapi/entry.cgi"
+        params = {
+            "api": api,
+            "version": str(version),
+            "method": "download",
+            "unit_id": f"[{numeric_item_id}]",
+            "cache_key": cache_key,
+            "force_download": "true",
+        }
+
+        real_passphrase = self.album_passphrase_map.get(album_id)
+        if real_passphrase:
+            params["passphrase"] = real_passphrase
+
+        headers = {"Accept-Encoding": "identity"}
+        if range_header:
+            headers["Range"] = range_header
+        request = self.client.build_request("GET", url, params=params, headers=headers)
+        return await self.client.send(request, stream=True)
+
+    async def _get_photo_download_version(self, api: str) -> int:
+        if api in self.photo_download_versions:
+            return self.photo_download_versions[api]
+
+        response = await self.client.get(
+            f"{self.base_url}/webapi/query.cgi",
+            params={
+                "api": "SYNO.API.Info",
+                "version": "1",
+                "method": "query",
+                "query": api,
+            },
+        )
+        response.raise_for_status()
+        data = response.json()
+        api_info = data.get("data", {}).get(api)
+        if not data.get("success") or not isinstance(api_info, dict):
+            raise RuntimeError(f"Synology does not advertise the {api} API")
+
+        try:
+            version = int(api_info["maxVersion"])
+        except (KeyError, TypeError, ValueError) as error:
+            raise RuntimeError(f"Synology returned an invalid version for {api}") from error
+        self.photo_download_versions[api] = version
+        return version
 
     async def close(self):
         await self.client.aclose()

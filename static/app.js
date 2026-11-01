@@ -17,6 +17,8 @@ const elements = {
     themeToggle: document.getElementById('theme-toggle'),
     lightbox: document.getElementById('lightbox'),
     lightboxImg: document.getElementById('lightbox-img'),
+    lightboxVideo: document.getElementById('lightbox-video'),
+    lightboxVideoError: document.getElementById('lightbox-video-error'),
     lightboxInfo: document.getElementById('lightbox-info'),
     metadataList: document.getElementById('metadata-list'),
     metadataEmpty: document.getElementById('metadata-empty'),
@@ -53,6 +55,8 @@ const translations = {
         lightboxClose: 'Fermer',
         photoPrevious: 'Photo précédente',
         photoNext: 'Photo suivante',
+        videoPlayer: 'Lecteur vidéo',
+        videoUnsupported: 'Cette vidéo ne peut pas être lue. Son format ou son codec n’est peut-être pas compatible avec votre navigateur.',
         photoPreview: 'Aperçu de la photo',
         photoDetails: 'Informations sur la photo',
         photoInfoShow: 'Afficher les informations de la photo',
@@ -95,6 +99,8 @@ const translations = {
         lightboxClose: 'Close',
         photoPrevious: 'Previous photo',
         photoNext: 'Next photo',
+        videoPlayer: 'Video player',
+        videoUnsupported: 'This video cannot be played. Its format or codec may not be supported by your browser.',
         photoPreview: 'Photo preview',
         photoDetails: 'Photo details',
         photoInfoShow: 'Show photo details',
@@ -137,6 +143,8 @@ const translations = {
         lightboxClose: 'Cerrar',
         photoPrevious: 'Foto anterior',
         photoNext: 'Foto siguiente',
+        videoPlayer: 'Reproductor de vídeo',
+        videoUnsupported: 'No se puede reproducir este vídeo. Es posible que tu navegador no admita su formato o códec.',
         photoPreview: 'Vista previa de la foto',
         photoDetails: 'Información de la foto',
         photoInfoShow: 'Mostrar información de la foto',
@@ -179,6 +187,8 @@ const translations = {
         lightboxClose: 'Schließen',
         photoPrevious: 'Vorheriges Foto',
         photoNext: 'Nächstes Foto',
+        videoPlayer: 'Videoplayer',
+        videoUnsupported: 'Dieses Video kann nicht wiedergegeben werden. Dein Browser unterstützt möglicherweise das Format oder den Codec nicht.',
         photoPreview: 'Fotovorschau',
         photoDetails: 'Fotoinformationen',
         photoInfoShow: 'Fotoinformationen anzeigen',
@@ -221,6 +231,8 @@ const translations = {
         lightboxClose: 'Fechar',
         photoPrevious: 'Fotografia anterior',
         photoNext: 'Fotografia seguinte',
+        videoPlayer: 'Leitor de vídeo',
+        videoUnsupported: 'Não é possível reproduzir este vídeo. O formato ou codec pode não ser suportado pelo seu navegador.',
         photoPreview: 'Pré-visualização da fotografia',
         photoDetails: 'Informações da fotografia',
         photoInfoShow: 'Mostrar informações da fotografia',
@@ -537,26 +549,39 @@ async function loadPhotos(albumId, albumName) {
     
     photos.forEach(photo => {
         const cacheKey = photo.additional?.thumbnail?.cache_key || '';
+        const isVideo = isVideoItem(photo);
         
         const paramsSm = new URLSearchParams({ cache_key: cacheKey, size: 'sm', album_id: albumId });
         const paramsXl = new URLSearchParams({ cache_key: cacheKey, size: 'xl', album_id: albumId });
+        const videoParams = new URLSearchParams({ cache_key: cacheKey, album_id: albumId });
+        if (photo.owner_user_id !== undefined && photo.owner_user_id !== null) {
+            videoParams.set('owner_user_id', String(photo.owner_user_id));
+        }
         
         const imgUrl = `/api/images/${photo.id}?${paramsSm.toString()}`;
         const highResUrl = `/api/images/${photo.id}?${paramsXl.toString()}`;
         const photoIndex = lightboxPhotos.length;
         lightboxPhotos.push({
             url: highResUrl,
+            videoUrl: `/api/videos/${photo.id}?${videoParams.toString()}`,
+            isVideo,
             alt: photo.filename || translate('photoPreview'),
             metadata: photo
         });
         
         const card = document.createElement('div');
-        card.className = 'card';
+        card.className = isVideo ? 'card video-card' : 'card';
         card.onclick = () => openLightbox(photoIndex);
-        card.innerHTML = `<div class="card-img-wrapper"><img src="${imgUrl}" loading="lazy" alt="${photo.filename}"></div>`;
+        card.innerHTML = `<div class="card-img-wrapper"><img src="${imgUrl}" loading="lazy" alt="${photo.filename || translate('photoPreview')}">${isVideo ? '<span class="video-play-indicator" aria-hidden="true">▶</span>' : ''}</div>`;
         card.querySelector('img').draggable = false;
         elements.photosContainer.appendChild(card);
     });
+}
+
+function isVideoItem(item) {
+    if (typeof item?.type === 'string' && item.type.toLowerCase() === 'video') return true;
+    if (typeof item?.media_type === 'string' && item.media_type.toLowerCase() === 'video') return true;
+    return /\.(?:3gp|avi|m4v|mkv|mov|mp4|mpeg|mpg|ogv|webm)$/i.test(item?.filename || '');
 }
 
 function openLightbox(index) {
@@ -839,8 +864,19 @@ function updateLightboxPhoto() {
     const photo = lightboxPhotos[currentPhotoIndex];
     if (!photo) return;
 
-    elements.lightboxImg.src = photo.url;
-    elements.lightboxImg.alt = photo.alt;
+    elements.lightboxVideo.pause();
+    elements.lightboxVideo.removeAttribute('src');
+    elements.lightboxVideo.load();
+    elements.lightboxVideoError.classList.add('hidden');
+    elements.lightboxVideo.classList.toggle('hidden', !photo.isVideo);
+    elements.lightboxImg.classList.toggle('hidden', photo.isVideo);
+    if (photo.isVideo) {
+        elements.lightboxVideo.src = photo.videoUrl;
+        elements.lightboxVideo.load();
+    } else {
+        elements.lightboxImg.src = photo.url;
+        elements.lightboxImg.alt = photo.alt;
+    }
     renderPhotoMetadata(photo.metadata);
     elements.lightboxPrev.disabled = currentPhotoIndex === 0;
     elements.lightboxNext.disabled = currentPhotoIndex === lightboxPhotos.length - 1;
@@ -878,6 +914,9 @@ function showNextPhoto() {
 function closeLightbox() {
     elements.lightbox.classList.add('hidden');
     elements.lightboxImg.src = '';
+    elements.lightboxVideo.pause();
+    elements.lightboxVideo.removeAttribute('src');
+    elements.lightboxVideo.load();
     setPhotoMetadataOpen(false);
     photoMap?.remove();
     photoMap = null;
@@ -926,9 +965,21 @@ elements.photosContainer.addEventListener('dragstart', event => {
 });
 elements.lightboxImg.addEventListener('contextmenu', event => event.preventDefault());
 elements.lightboxImg.addEventListener('dragstart', event => event.preventDefault());
+elements.lightboxVideo.addEventListener('error', () => {
+    const photo = lightboxPhotos[currentPhotoIndex];
+    if (!photo?.isVideo || elements.lightboxVideo.getAttribute('src') !== photo.videoUrl) return;
+    elements.lightboxVideoError.classList.remove('hidden');
+});
+elements.lightboxVideo.addEventListener('loadeddata', () => {
+    const photo = lightboxPhotos[currentPhotoIndex];
+    if (!photo?.isVideo || elements.lightboxVideo.getAttribute('src') !== photo.videoUrl) return;
+    elements.lightboxVideoError.classList.add('hidden');
+});
+elements.lightboxVideo.addEventListener('contextmenu', event => event.preventDefault());
 
 document.addEventListener('keydown', event => {
     if (elements.lightbox.classList.contains('hidden')) return;
+    if (event.target === elements.lightboxVideo && ['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     if (event.key === 'ArrowLeft') showPreviousPhoto();
     else if (event.key === 'ArrowRight') showNextPhoto();
     else if (event.key === 'Escape') closeLightbox();

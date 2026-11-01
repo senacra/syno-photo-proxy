@@ -32,6 +32,8 @@ The fullscreen viewer can show a photo alongside its available EXIF details:
 * **Total Isolation:** The Synology NAS hosting your photos remains completely isolated from the web. Only this proxy service (FastAPI) is publicly accessible.
 * **Restricted Account** Uses a dedicated local account with minimal permissions. The system handles album sharing (including albums shared with the account without it being the initial creator) using memory-mapped IDs (`secure_xxx`).
 * **Optimized Streaming:** Images and thumbnails are streamed on-the-fly from the NAS to the client with HTTP cache headers (`Cache-Control`) to reduce bandwidth and server load.
+* **Thumbnail Cache:** Small (`sm`) image thumbnails are cached on the server disk (up to 512 MB by default), reducing repeat requests to the NAS. Video and full-size image streams are not cached.
+* **Video Playback:** Videos are streamed from the NAS with byte-range requests forwarded for playback seeking. Seeking depends on the DSM/Photos version honoring those requests. Playback also depends on the browser's supported video formats and codecs; no server-side transcoding is performed.
 * **Photo details:** The fullscreen viewer can display available EXIF information and an OpenStreetMap map for photos with GPS coordinates.
 * **Casual download deterrence:** Image context menus and drag-and-drop are disabled in the gallery. This is not access control: displayed images can still be saved by other means or captured with a screenshot.
 
@@ -102,9 +104,13 @@ nas_pass=my_secure_password
 allowed_albums=1,2,42
 gallery_title=Our Family Memories
 PHOTO_MAP_ENABLED=false
+IMAGE_CACHE_DIR=/app/cache/images
+IMAGE_CACHE_MAX_SIZE_MB=512
 ```
 
 `PHOTO_MAP_ENABLED` controls both the map and whether GPS/address fields are included in photo API responses. It defaults to `false` for privacy; set it to `true` to opt in to maps. Restart the service after changing this setting.
+
+`IMAGE_CACHE_DIR` and `IMAGE_CACHE_MAX_SIZE_MB` configure the server-side disk cache for small thumbnails. The cache defaults to 512 MB and evicts older entries when full. Docker Compose stores it in a named volume so entries survive container restarts. Only thumbnails are cached; full-size images and videos continue to stream directly from the NAS. The first request still has to fetch an image from the NAS; subsequent requests can be served from the proxy cache.
 
 ### 2. Install Dependencies
 ``` bash
@@ -126,6 +132,7 @@ Open your browser and navigate to `http://localhost:8000`.
 * `GET /api/albums` : Lists authorized albums masked by secure IDs.
 * `GET /api/albums/{album_id}` : Returns the list of photos for a specific album.
 * `GET /api/images/{item_id}` : Proxy route to securely stream thumbnails and images from the Synology NAS.
+* `GET /api/videos/{item_id}` : Proxy route to stream a video from the Synology NAS, forwarding byte-range requests for playback seeking.
 
 ### Authentication & User Management
 

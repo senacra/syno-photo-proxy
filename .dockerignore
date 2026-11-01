@@ -3,4 +3,5 @@ __pycache__/
 .env
 .git/
 .venv/
+cache/
 venv/

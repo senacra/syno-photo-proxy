@@ -100,6 +100,8 @@
         <button id="lightbox-prev" class="lightbox-control lightbox-nav" type="button" aria-label="Photo précédente" data-i18n-aria-label="photoPrevious">‹</button>
         <div id="lightbox-content">
             <img id="lightbox-img" src="" alt="Aperçu" draggable="false">
+            <video id="lightbox-video" class="hidden" controls playsinline preload="metadata" controlslist="nodownload" aria-label="Lecteur vidéo" data-i18n-aria-label="videoPlayer"></video>
+            <p id="lightbox-video-error" class="hidden" data-i18n="videoUnsupported">Cette vidéo ne peut pas être lue par votre navigateur.</p>
             <aside id="photo-metadata" aria-labelledby="photo-metadata-title">
                 <h2 id="photo-metadata-title" data-i18n="photoDetails">Informations sur la photo</h2>
                 <dl id="metadata-list"></dl>

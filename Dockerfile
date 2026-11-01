@@ -6,7 +6,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY main.py synology_client.py ./
+COPY main.py media_cache.py synology_client.py ./
 COPY static/ ./static/
 
 EXPOSE 8000
