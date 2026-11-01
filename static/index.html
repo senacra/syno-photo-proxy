@@ -18,19 +18,6 @@
         </header>
 
         <main>
-            <section id="welcome-banner" class="welcome-banner">
-                <div class="banner-content">
-                    <h2> À propos de cet espace privé</h2>
-                    <p>
-                        Cet espace a été créé pour partager nos souvenirs en toute intimité, <strong>sans intermédiaire commercial ni stockage sur des serveurs tiers</strong>. 
-                        Héberger ses photos sur les réseaux sociaux (Facebook, Instagram, WhatsApp, Snapchat, etc.), c'est confier sa vie privée à des entreprises qui les analysent, les monétisent et s'en servent pour entraîner leurs intelligences artificielles. Ici, tout reste à la maison, directement sur notre propre matériel.
-                    </p>
-                    <p class="warning-text">
-                        <strong>Règle importante :</strong> Merci de ne pas télécharger les photos pour les réexpédier ou les publier sur les réseaux sociaux ou des applications de messagerie.
-                    </p>
-                </div>
-            </section>
-
             <div id="loader" class="hidden">Chargement des souvenirs...</div>
             
             <div id="albums-container" class="grid-container"></div>
@@ -38,9 +25,36 @@
         </main>
     </div>
 
+    <dialog id="rules-dialog" aria-labelledby="rules-title" aria-describedby="rules-description">
+        <div class="rules-dialog-content">
+            <div class="rules-icon" aria-hidden="true">♥</div>
+            <p class="dialog-eyebrow">Un espace privé</p>
+            <h2 id="rules-title">Avant de découvrir les souvenirs</h2>
+            <div class="rules-introduction" id="rules-description">
+                <p>
+                    Cet espace a été créé pour partager nos souvenirs en toute intimité, <strong>sans intermédiaire commercial ni stockage sur des serveurs tiers</strong>.
+                </p>
+                <p>
+                    Héberger ses photos sur les réseaux sociaux (Facebook, Instagram, WhatsApp, Snapchat, etc.), c'est confier sa vie privée à des entreprises qui les analysent, les monétisent et s'en servent pour entraîner leurs intelligences artificielles.
+                </p>
+                <p>
+                    Ici, tout reste à la maison, directement sur notre propre matériel.
+                </p>
+            </div>
+            <div class="rules-notice">
+                <strong>Merci de respecter cette règle :</strong>
+                <p>Ne téléchargez pas les photos pour les réexpédier ou les publier sur les réseaux sociaux ou des applications de messagerie.</p>
+            </div>
+            <button id="rules-accept" class="primary-button" autofocus>J’accepte les règles et je continue</button>
+        </div>
+    </dialog>
+
     <div id="lightbox" class="hidden">
-        <span id="lightbox-close">&times;</span>
+        <button id="lightbox-close" class="lightbox-control" type="button" aria-label="Fermer">&times;</button>
+        <button id="lightbox-prev" class="lightbox-control lightbox-nav" type="button" aria-label="Photo précédente">‹</button>
         <img id="lightbox-img" src="" alt="Aperçu">
+        <button id="lightbox-next" class="lightbox-control lightbox-nav" type="button" aria-label="Photo suivante">›</button>
+        <span id="lightbox-counter" aria-live="polite"></span>
     </div>
 
     <script src="app.js"></script>
