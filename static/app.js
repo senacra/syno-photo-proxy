@@ -702,7 +702,7 @@ function buildPhotoMetadata(photo) {
         formatPhotoResolution(getValue(exif, ['resolution', 'dimensions']));
 
     return {
-        gps: photoMapEnabled ? approximateGps : null,
+        gps: photoMapEnabled ? gps : null,
         rows: [
             ['photoDate', formatPhotoDate(date)],
             ['photoCamera', formatExifValue(getValue(exif, ['camera', 'camera_model', 'model']))],
@@ -781,18 +781,18 @@ function updatePhotoMap(gps, isVisible) {
     elements.photoMap.classList.remove('hidden');
     loadLeaflet().then(() => {
         const currentPhotoGps = getPhotoGps(lightboxPhotos[currentPhotoIndex]?.metadata);
-        const currentApproximateGps = currentPhotoGps ? roundPhotoCoordinates(currentPhotoGps) : null;
         if (elements.lightbox.classList.contains('hidden') ||
             !photoMapEnabled ||
             (window.matchMedia('(max-width: 760px)').matches &&
                 !elements.lightbox.classList.contains('metadata-open')) ||
-            !currentApproximateGps ||
-            currentApproximateGps.latitude !== gps.latitude ||
-            currentApproximateGps.longitude !== gps.longitude) return;
+            !currentPhotoGps ||
+            currentPhotoGps.latitude !== gps.latitude ||
+            currentPhotoGps.longitude !== gps.longitude) return;
 
+        const approximateGps = roundPhotoCoordinates(gps);
         if (!photoMap) {
             photoMap = window.L.map(elements.photoMap, { scrollWheelZoom: false, dragging: true })
-                .setView([gps.latitude, gps.longitude], 8);
+                .setView([approximateGps.latitude, approximateGps.longitude], 8);
             const tileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -800,20 +800,19 @@ function updatePhotoMap(gps, isVisible) {
             tileLayer.on('tileerror', () => elements.mapError.classList.remove('hidden'));
             photoMapMarker = window.L.marker([gps.latitude, gps.longitude]).addTo(photoMap);
         } else {
-            photoMap.setView([gps.latitude, gps.longitude], 8);
+            photoMap.setView([approximateGps.latitude, approximateGps.longitude], 8);
             photoMapMarker.setLatLng([gps.latitude, gps.longitude]);
         }
         requestAnimationFrame(() => photoMap?.invalidateSize());
     }).catch(error => {
         const currentPhotoGps = getPhotoGps(lightboxPhotos[currentPhotoIndex]?.metadata);
-        const currentApproximateGps = currentPhotoGps ? roundPhotoCoordinates(currentPhotoGps) : null;
         if (!photoMapEnabled ||
             elements.lightbox.classList.contains('hidden') ||
             (window.matchMedia('(max-width: 760px)').matches &&
                 !elements.lightbox.classList.contains('metadata-open')) ||
-            !currentApproximateGps ||
-            currentApproximateGps.latitude !== gps.latitude ||
-            currentApproximateGps.longitude !== gps.longitude) return;
+            !currentPhotoGps ||
+            currentPhotoGps.latitude !== gps.latitude ||
+            currentPhotoGps.longitude !== gps.longitude) return;
         console.error('Impossible de charger la carte de la photo.', error);
         elements.photoMap.classList.add('hidden');
         elements.mapError.classList.remove('hidden');
