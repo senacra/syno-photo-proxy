@@ -39,7 +39,33 @@ A lightweight web service based on a **BFF (Backend-For-Frontend)** architecture
 
 ---
 
-## ⚙️ Configuration & Setup
+## 🐳 Docker Deployment (Recommended)
+
+A pre-built Docker image is available on the GitHub Container Registry (GHCR). You don't need to build it yourself; you can simply pull it and run it.
+
+1. Create your `.env` file (see `.env_EXAMPLE`).
+2. Create a `docker-compose.yml` file with the following content:
+
+```yaml
+version: '3.8'
+
+services:
+  syno-photo-proxy:
+    image: ghcr.io/senacra/syno-photo-proxy:latest
+    container_name: syno-photo-proxy
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+```
+3. Run
+
+``` bash
+docker compose up -d
+```
+
+## ⚙️ (Dev) Configuration & Setup
 
 ### 1. Environment Variables
 Create a `.env` file in the root directory of the project (see `.env_EXAMPLE`):
