@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     nas_pass: str
     allowed_albums: str = ""
     gallery_title: str = "Galerie Photos"
+    photo_map_enabled: bool = False
     model_config = SettingsConfigDict(env_file=".env")
 
 settings = Settings()
@@ -27,6 +28,34 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+LOCATION_METADATA_KEYS = {
+    "address",
+    "coordinates",
+    "geocoding",
+    "geocodingid",
+    "latitude",
+    "latituderef",
+    "lat",
+    "location",
+    "longitude",
+    "longituderef",
+    "lon",
+    "lng",
+    "position",
+}
+
+def strip_photo_location_metadata(value):
+    if isinstance(value, dict):
+        return {
+            key: strip_photo_location_metadata(item)
+            for key, item in value.items()
+            if key.lower().replace("_", "").replace("-", "") not in LOCATION_METADATA_KEYS
+            and not key.lower().startswith("gps")
+        }
+    if isinstance(value, list):
+        return [strip_photo_location_metadata(item) for item in value]
+    return value
+
 @app.get("/api/albums")
 async def get_albums():
     try:
@@ -38,6 +67,8 @@ async def get_albums():
 async def get_album(album_id: str):
     try:
         items = await syno_client.get_album_items(album_id)
+        if not settings.photo_map_enabled:
+            items = [strip_photo_location_metadata(item) for item in items]
         return {"items": items}
     except Exception as e:
         raise HTTPException(status_code=403, detail=str(e))
@@ -65,7 +96,10 @@ async def get_image(item_id: str, cache_key: str, size: str = "sm", album_id: st
     
 @app.get("/api/config")
 async def get_config():
-    return {"title": settings.gallery_title}
+    return {
+        "title": settings.gallery_title,
+        "photo_map_enabled": settings.photo_map_enabled,
+    }
 
 @app.get("/api/user")
 async def get_user(request: Request):

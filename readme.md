@@ -35,7 +35,8 @@ The fullscreen viewer can show a photo alongside its available EXIF details:
 * **Photo details:** The fullscreen viewer can display available EXIF information and an OpenStreetMap map for photos with GPS coordinates.
 * **Casual download deterrence:** Image context menus and drag-and-drop are disabled in the gallery. This is not access control: displayed images can still be saved by other means or captured with a screenshot.
 
-Opening a GPS map loads Leaflet assets from unpkg.com and map tiles from OpenStreetMap tile servers. Both services receive the visitor's IP address; the map tile requests also reveal the approximate area being viewed to OpenStreetMap. No map tiles are requested for photos without GPS coordinates.
+> [!WARNING] **Privacy**
+> When enabled, the map uses coordinates rounded to one decimal place and a reduced zoom level; it does not place the exact GPS point. Opening it loads Leaflet from unpkg.com and map tiles from OpenStreetMap tile servers. These services receive the visitor's IP address, and OpenStreetMap can infer the approximate area from requested tiles. Set `PHOTO_MAP_ENABLED=false` in `.env` to disable the map and omit GPS/address metadata from the photo API response; no map assets or tiles are then requested. Set it to `true` to enable the map. This setting does not modify the image bytes themselves, which may contain embedded metadata.
 
 ---
 
@@ -98,7 +99,10 @@ nas_user=my_minimal_user
 nas_pass=my_secure_password
 allowed_albums=1,2,42
 gallery_title=Our Family Memories
+PHOTO_MAP_ENABLED=false
 ```
+
+`PHOTO_MAP_ENABLED` controls both the map and whether GPS/address fields are included in photo API responses. It defaults to `false` for privacy; set it to `true` to opt in to maps. Restart the service after changing this setting.
 
 ### 2. Install Dependencies
 ``` bash

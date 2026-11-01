@@ -679,19 +679,19 @@ h1 {
         display: none;
         position: absolute;
         z-index: 5;
-        top: 68px;
-        right: 16px;
-        bottom: 60px;
-        left: 16px;
+        top: 50px;
+        right: 12px;
+        bottom: 50px;
+        left: 12px;
         max-height: none;
         padding: 18px;
         overflow-y: auto;
-        border: 1px solid rgba(201, 209, 217, 0.2);
-        border-radius: 14px;
-        background: rgba(13, 17, 23, 0.94);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        border: 0;
+        border-radius: 0;
+        background: rgba(13, 17, 23, 0.76);
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
     }
 
     #lightbox.metadata-open #photo-metadata {
@@ -782,19 +782,19 @@ h1 {
         display: none;
         position: absolute;
         z-index: 5;
-        top: 68px;
+        top: 50px;
         right: 48px;
-        bottom: 60px;
+        bottom: 50px;
         left: 48px;
         max-height: none;
         padding: 18px;
         overflow-y: auto;
-        border: 1px solid rgba(201, 209, 217, 0.2);
-        border-radius: 14px;
-        background: rgba(13, 17, 23, 0.94);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        border: 0;
+        border-radius: 0;
+        background: rgba(13, 17, 23, 0.76);
+        box-shadow: none;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
     }
 
     #lightbox.metadata-open #photo-metadata {

@@ -256,6 +256,7 @@ let touchStart = null;
 let photoMap = null;
 let photoMapMarker = null;
 let leafletLoadPromise = null;
+let photoMapEnabled = false;
 
 try {
     const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
@@ -457,13 +458,20 @@ async function loadUser() {
 async function loadConfig() {
     try {
         const res = await fetch('/api/config');
+        if (!res.ok) throw new Error(`Erreur lors du chargement de la configuration : ${res.status}`);
         const data = await res.json();
+        if (typeof data.photo_map_enabled !== 'boolean') {
+            throw new Error('La configuration du serveur ne précise pas si la carte est activée.');
+        }
+        photoMapEnabled = data.photo_map_enabled;
         if (data.title) {
             hasCustomGalleryTitle = data.title !== 'Galerie Photos';
             galleryTitle = hasCustomGalleryTitle ? data.title : translate('defaultGalleryTitle');
             updateGalleryTitles();
         }
     } catch (e) {
+        photoMapEnabled = false;
+        console.error('Impossible de charger la configuration de la galerie.', e);
         elements.title.textContent = galleryTitle;
     }
 }
@@ -680,18 +688,21 @@ function buildPhotoMetadata(photo) {
     const resolution = additional.resolution || photo.resolution;
     const gps = getPhotoGps(photo);
     const address = additional.address || photo.address || {};
-    const location = gps
-        ? `${gps.latitude.toFixed(5)}, ${gps.longitude.toFixed(5)}`
-        : [getValue(address, ['city']), getValue(address, ['state', 'region']), getValue(address, ['country'])]
-            .filter(Boolean)
-            .join(', ');
+    const approximateGps = gps ? roundPhotoCoordinates(gps) : null;
+    const location = photoMapEnabled
+        ? approximateGps
+            ? `${approximateGps.latitude.toFixed(1)}, ${approximateGps.longitude.toFixed(1)}`
+            : [getValue(address, ['city']), getValue(address, ['state', 'region']), getValue(address, ['country'])]
+                .filter(Boolean)
+                .join(', ')
+        : null;
     const date = getValue(exif, ['datetimeoriginal', 'date_time_original', 'datetime', 'date_time']) ??
         getValue(photo, ['time', 'date', 'created_time']);
     const dimensions = formatPhotoResolution(resolution) ||
         formatPhotoResolution(getValue(exif, ['resolution', 'dimensions']));
 
     return {
-        gps,
+        gps: photoMapEnabled ? approximateGps : null,
         rows: [
             ['photoDate', formatPhotoDate(date)],
             ['photoCamera', formatExifValue(getValue(exif, ['camera', 'camera_model', 'model']))],
@@ -703,6 +714,17 @@ function buildPhotoMetadata(photo) {
             ['photoResolution', dimensions],
             ['photoLocation', location]
         ].filter(([, value]) => value !== undefined && value !== null && value !== '')
+    };
+}
+
+function roundPhotoCoordinates(gps) {
+    const roundToTenth = coordinate => {
+        const rounded = Math.round(coordinate * 10) / 10;
+        return Object.is(rounded, -0) ? 0 : rounded;
+    };
+    return {
+        latitude: roundToTenth(gps.latitude),
+        longitude: roundToTenth(gps.longitude)
     };
 }
 
@@ -743,7 +765,7 @@ function loadLeaflet() {
 
 function updatePhotoMap(gps, isVisible) {
     elements.mapError.classList.add('hidden');
-    if (!gps) {
+    if (!gps || !photoMapEnabled) {
         elements.photoMap.classList.add('hidden');
         photoMap?.remove();
         photoMap = null;
@@ -758,13 +780,19 @@ function updatePhotoMap(gps, isVisible) {
 
     elements.photoMap.classList.remove('hidden');
     loadLeaflet().then(() => {
+        const currentPhotoGps = getPhotoGps(lightboxPhotos[currentPhotoIndex]?.metadata);
+        const currentApproximateGps = currentPhotoGps ? roundPhotoCoordinates(currentPhotoGps) : null;
         if (elements.lightbox.classList.contains('hidden') ||
-            getPhotoGps(lightboxPhotos[currentPhotoIndex]?.metadata)?.latitude !== gps.latitude ||
-            getPhotoGps(lightboxPhotos[currentPhotoIndex]?.metadata)?.longitude !== gps.longitude) return;
+            !photoMapEnabled ||
+            (window.matchMedia('(max-width: 760px)').matches &&
+                !elements.lightbox.classList.contains('metadata-open')) ||
+            !currentApproximateGps ||
+            currentApproximateGps.latitude !== gps.latitude ||
+            currentApproximateGps.longitude !== gps.longitude) return;
 
         if (!photoMap) {
             photoMap = window.L.map(elements.photoMap, { scrollWheelZoom: false, dragging: true })
-                .setView([gps.latitude, gps.longitude], 13);
+                .setView([gps.latitude, gps.longitude], 8);
             const tileLayer = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -772,11 +800,20 @@ function updatePhotoMap(gps, isVisible) {
             tileLayer.on('tileerror', () => elements.mapError.classList.remove('hidden'));
             photoMapMarker = window.L.marker([gps.latitude, gps.longitude]).addTo(photoMap);
         } else {
-            photoMap.setView([gps.latitude, gps.longitude], 13);
+            photoMap.setView([gps.latitude, gps.longitude], 8);
             photoMapMarker.setLatLng([gps.latitude, gps.longitude]);
         }
         requestAnimationFrame(() => photoMap?.invalidateSize());
     }).catch(error => {
+        const currentPhotoGps = getPhotoGps(lightboxPhotos[currentPhotoIndex]?.metadata);
+        const currentApproximateGps = currentPhotoGps ? roundPhotoCoordinates(currentPhotoGps) : null;
+        if (!photoMapEnabled ||
+            elements.lightbox.classList.contains('hidden') ||
+            (window.matchMedia('(max-width: 760px)').matches &&
+                !elements.lightbox.classList.contains('metadata-open')) ||
+            !currentApproximateGps ||
+            currentApproximateGps.latitude !== gps.latitude ||
+            currentApproximateGps.longitude !== gps.longitude) return;
         console.error('Impossible de charger la carte de la photo.', error);
         elements.photoMap.classList.add('hidden');
         elements.mapError.classList.remove('hidden');
